@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Login</title>
+    <title>Sistema de Login con Perfil</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,7 +14,7 @@
             height: 100vh;
             margin: 0;
         }
-        .login-container {
+        .container {
             background-color: white;
             padding: 2rem;
             border-radius: 8px;
@@ -73,7 +73,7 @@
         .hidden {
             display: none;
         }
-        .welcome-panel {
+        .panel {
             text-align: center;
         }
         .logout-btn {
@@ -83,10 +83,42 @@
         .logout-btn:hover {
             background-color: #d32f2f;
         }
+        .profile-btn {
+            background-color: #2196F3;
+            margin-top: 1rem;
+        }
+        .profile-btn:hover {
+            background-color: #0b7dda;
+        }
+        .back-btn {
+            background-color: #607d8b;
+            margin-top: 1rem;
+        }
+        .back-btn:hover {
+            background-color: #455a64;
+        }
+        .profile-info {
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+        .profile-info p {
+            margin: 0.5rem 0;
+        }
+        .profile-info strong {
+            display: inline-block;
+            width: 100px;
+        }
+        .menu-btn {
+            margin-top: 0.5rem;
+        }
     </style>
 </head>
 <body>
-    <div class="login-container" id="loginForm">
+    <!-- Formulario de Login -->
+    <div class="container" id="loginForm">
         <h2>Iniciar Sesión</h2>
         <form id="authForm">
             <div class="form-group">
@@ -97,25 +129,41 @@
                 <label for="password">Contraseña:</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <button type="submit">Iniciar Sesión</button> 
+            <button type="submit">Iniciar Sesión</button>
         </form>
         <div id="errorMessage" class="message error hidden"></div>
     </div>
 
-    <div class="login-container hidden" id="welcomePanel">
-        <div class="welcome-panel">
+    <!-- Panel de Bienvenida -->
+    <div class="container hidden" id="welcomePanel">
+        <div class="panel">
             <h2>Bienvenido</h2>
             <p id="welcomeMessage">Has iniciado sesión correctamente.</p>
             <p><strong>Usuario:</strong> <span id="userDisplay"></span></p>
+            <button class="profile-btn" id="profileBtn">Ver Mi Perfil</button>
             <button class="logout-btn" id="logoutBtn">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <!-- Panel de Perfil -->
+    <div class="container hidden" id="profilePanel">
+        <div class="panel">
+            <h2>Mi Perfil</h2>
+            <div class="profile-info">
+                <p><strong>Nombre:</strong> <span id="profileName"></span></p>
+                <p><strong>Correo:</strong> <span id="profileEmail"></span></p>
+                <p><strong>Contraseña:</strong> <span id="profilePassword"></span></p>
+            </div>
+            <button class="back-btn" id="backBtn">Volver</button>
+            <button class="logout-btn" id="profileLogoutBtn">Cerrar Sesión</button>
         </div>
     </div>
 
     <script>
         // Usuarios de demostración (simulando una base de datos)
         const users = [
-            { username: "usuario1", password: "password123" },
-            { username: "usuario2", password: "securepass" }
+            { username: "usuario1", email: "usuario1@example.com", password: "password123" },
+            { username: "usuario2", email: "usuario2@example.com", password: "securepass" }
         ];
 
         // Elementos del DOM
@@ -123,8 +171,18 @@
         const errorMessage = document.getElementById("errorMessage");
         const loginForm = document.getElementById("loginForm");
         const welcomePanel = document.getElementById("welcomePanel");
+        const profilePanel = document.getElementById("profilePanel");
         const userDisplay = document.getElementById("userDisplay");
+        const profileBtn = document.getElementById("profileBtn");
         const logoutBtn = document.getElementById("logoutBtn");
+        const backBtn = document.getElementById("backBtn");
+        const profileLogoutBtn = document.getElementById("profileLogoutBtn");
+        const profileName = document.getElementById("profileName");
+        const profileEmail = document.getElementById("profileEmail");
+        const profilePassword = document.getElementById("profilePassword");
+        
+        // Variables globales
+        let currentUser = null;
         
         // Función para mostrar mensajes de error
         function showError(message) {
@@ -133,6 +191,13 @@
             setTimeout(() => {
                 errorMessage.classList.add("hidden");
             }, 3000);
+        }
+        
+        // Función para ocultar todos los paneles
+        function hideAllPanels() {
+            loginForm.classList.add("hidden");
+            welcomePanel.classList.add("hidden");
+            profilePanel.classList.add("hidden");
         }
         
         // Manejar envío del formulario
@@ -150,35 +215,63 @@
             
             if (user) {
                 // Login exitoso
-                loginForm.classList.add("hidden");
+                currentUser = user;
+                hideAllPanels();
                 welcomePanel.classList.remove("hidden");
                 userDisplay.textContent = user.username;
                 
-                // También podrías guardar el estado de la sesión en localStorage
-                localStorage.setItem("currentUser", JSON.stringify({
-                    username: user.username
-                }));
+                // Guardar en localStorage
+                localStorage.setItem("currentUser", JSON.stringify(user));
             } else {
                 // Login fallido
                 showError("Usuario o contraseña incorrectos");
             }
         });
         
-        // Manejar cierre de sesión
+        // Manejar botón de perfil
+        profileBtn.addEventListener("click", function() {
+            hideAllPanels();
+            profilePanel.classList.remove("hidden");
+            
+            // Mostrar datos del perfil
+            profileName.textContent = currentUser.username;
+            profileEmail.textContent = currentUser.email;
+            profilePassword.textContent = currentUser.password;
+        });
+        
+        // Manejar botón de volver
+        backBtn.addEventListener("click", function() {
+            hideAllPanels();
+            welcomePanel.classList.remove("hidden");
+        });
+        
+        // Manejar cierre de sesión (desde panel de bienvenida)
         logoutBtn.addEventListener("click", function() {
-            welcomePanel.classList.add("hidden");
+            logout();
+        });
+        
+        // Manejar cierre de sesión (desde panel de perfil)
+        profileLogoutBtn.addEventListener("click", function() {
+            logout();
+        });
+        
+        // Función de cierre de sesión
+        function logout() {
+            currentUser = null;
+            hideAllPanels();
             loginForm.classList.remove("hidden");
             authForm.reset();
             localStorage.removeItem("currentUser");
-        });
+        }
         
         // Verificar si hay una sesión activa al cargar la página
         window.addEventListener("load", function() {
-            const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-            if (currentUser) {
-                loginForm.classList.add("hidden");
+            const savedUser = JSON.parse(localStorage.getItem("currentUser"));
+            if (savedUser) {
+                currentUser = savedUser;
+                hideAllPanels();
                 welcomePanel.classList.remove("hidden");
-                userDisplay.textContent = currentUser.username;
+                userDisplay.textContent = savedUser.username;
             }
         });
     </script>
